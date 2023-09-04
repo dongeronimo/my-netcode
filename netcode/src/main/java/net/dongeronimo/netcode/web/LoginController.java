@@ -1,5 +1,7 @@
 package net.dongeronimo.netcode.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +21,7 @@ import net.dongeronimo.netcode.setup.JwtService;
  */
 @RestController
 public class LoginController {
+    Logger logger = LoggerFactory.getLogger(LoginController.class);
     private JwtService jwtService;
     private AuthenticationManager authenticationManager;
     public LoginController(JwtService _JwtService,
@@ -35,6 +38,7 @@ public class LoginController {
             credentials.getUsername(), credentials.getPassword());
         Authentication auth = authenticationManager.authenticate(creds);
         String jwts = jwtService.getToken(auth.getName());
+        logger.info("User "+credentials.getUsername()+" signed in");
         return ResponseEntity.ok()
             .header(HttpHeaders.AUTHORIZATION, "Bearer "+jwts)
             .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Authorization")
