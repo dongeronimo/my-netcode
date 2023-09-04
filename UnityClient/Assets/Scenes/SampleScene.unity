@@ -154,6 +154,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hostname: localhost
   port: 11111
+  username: alice
+  password: blablabla
+  httpHost: localhost:8080
 --- !u!4 &194945579
 Transform:
   m_ObjectHideFlags: 0
