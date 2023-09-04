@@ -10,12 +10,18 @@ import java.net.SocketException;
 import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UDPServer implements Runnable {
     private int port;
     private int datagramPacketSize;
+    /**
+     * O socket é inicializado logo no começo do thread.
+     */
+    private DatagramSocket socket;
     /**
      * Thread do server UDP, iniciado no construtor, morto no destroy.
      */
@@ -42,6 +48,7 @@ public class UDPServer implements Runnable {
     */
     @PreDestroy
     public void destroy() throws InterruptedException {
+        socket.close();
         isRunning = false;
         udpServerThread.join();
     }
@@ -53,14 +60,15 @@ public class UDPServer implements Runnable {
       catch(Exception ex){
         //Se deu algum caô ao pegar o socket não há como nem pq continuar, joga a runtime exception
         throw new RuntimeException(ex);
-      }
+      } 
     }
+    
     /**
      * Loop do thread
      */
     @Override
     public void run() {
-      DatagramSocket socket = createSocket(port);
+      socket = createSocket(port);
       byte[] buffer = new byte[datagramPacketSize];
       while(isRunning){
         try{
