@@ -1,4 +1,5 @@
 package net.dongeronimo.netcode.setup;
+import java.nio.file.AccessDeniedException;
 import java.security.Key;
 import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
@@ -35,5 +36,19 @@ public class JwtService {
                 return user;
         }
         return null;
+    }
+
+    public String getAuthUser(String token) throws AccessDeniedException{
+        String user = Jwts.parserBuilder()
+        .setSigningKey(key)
+        .build()
+        .parseClaimsJws(token.replace(PREFIX, ""))
+        .getBody()
+        .getSubject();
+        if(user!=null){
+            return user;
+        }else {
+            throw new AccessDeniedException("unknown user");
+        }
     }
 }

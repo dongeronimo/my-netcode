@@ -1,7 +1,6 @@
-package net.dongeronimo.netcode.service.user;
+package net.dongeronimo.netcode.web;
 /**
  * REST login request json 
- * TODO: Put it together with the rest
  */
 public class AccountCredentials {
     private String username;

@@ -10,9 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import net.dongeronimo.netcode.service.user.AccountCredentials;
 import net.dongeronimo.netcode.setup.JwtService;
-
+/**
+ * login endpoint: 
+ *   POST /login
+ *   body : {"username": USERNAME, "password": PASSWORD}
+ *   The jwt is returned on the response header, at the Authorization value.
+ */
 @RestController
 public class LoginController {
     private JwtService jwtService;

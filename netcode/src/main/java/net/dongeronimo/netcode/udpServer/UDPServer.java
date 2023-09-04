@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.AccessDeniedException;
 
 import javax.annotation.PreDestroy;
 
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import net.dongeronimo.netcode.setup.JwtService;
 
 @Component
 public class UDPServer implements Runnable {
@@ -30,11 +33,16 @@ public class UDPServer implements Runnable {
      * Flag de controle do loop infinito do thread do server udp. Se false pára o loop.
      */
     private boolean isRunning;
+    
+    private JwtService jwtService;
     /**
      * Inicia o thread do server.
      * @param port a porta do udp
      */
-    public UDPServer(@Value("${udp.port}") int port, @Value("${udp.datagramPacketSize}") int packetSize){
+    public UDPServer(@Value("${udp.port}") int port, 
+                     @Value("${udp.datagramPacketSize}") int packetSize,
+                     JwtService _JwtService){
+        this.jwtService = _JwtService;
         this.port = port;
         this.datagramPacketSize = packetSize;
         isRunning = true;
@@ -78,7 +86,14 @@ public class UDPServer implements Runnable {
           int port = packet.getPort();
           packet = new DatagramPacket(buffer, buffer.length, address, port);
           String received = new String(packet.getData(), 0, packet.getLength());
-          System.out.println("Chegou o pacote: "+received.trim());
+          String[] parts = received.split(" body ");
+          String token = parts[0];
+          String user = jwtService.getAuthUser(token);
+          String body = parts[1].trim();
+          System.out.println("user = "+user+" body = "+body);
+        }
+        catch(AccessDeniedException ex){
+          //don't care, dude is blocked.
         }
         catch(IOException ex){
           System.err.println("Erro de IO");
