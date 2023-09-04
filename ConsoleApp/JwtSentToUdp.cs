@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Net.Sockets;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace ConsoleApp
 {
@@ -27,11 +28,14 @@ namespace ConsoleApp
             this.password = password;
         }
 
+
         public void DoIt()
         {
             string jwt = logIn(username, password);
-            sendUDP(jwt, "loren ipsun dolor sit amet");
+            string message = "loren ipsun dolor sit amet";
+            sendUDP(jwt, message);
         }
+
         private void sendUDP(string jwt, string body) {
             IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
             var hostAddress = hostDnsEntries.AddressList[0];

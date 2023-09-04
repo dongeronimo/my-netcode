@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 
 import javax.annotation.PreDestroy;
@@ -18,7 +19,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-
+import java.time.Instant;
 import net.dongeronimo.netcode.service.user.UserDetailServiceImpl;
 import net.dongeronimo.netcode.setup.JwtService;
 
@@ -94,22 +95,35 @@ public class UDPServer implements Runnable {
       while(isRunning){
         try{
           //Waits for a new Packet
-          DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-          socket.receive(packet); 
+          DatagramPacket inboundPacket = new DatagramPacket(buffer, buffer.length);
+          socket.receive(inboundPacket); 
           //Reads the raw data as string
-          InetAddress address = packet.getAddress();
-          int port = packet.getPort();
-          packet = new DatagramPacket(buffer, buffer.length, address, port);
-          String received = new String(packet.getData(), 0, packet.getLength());
+          InetAddress address = inboundPacket.getAddress();
+          int port = inboundPacket.getPort();
+          inboundPacket = new DatagramPacket(buffer, buffer.length, address, port);
+          String received = new String(inboundPacket.getData(), 0, inboundPacket.getLength());
           //decodes the packet
-          String[] parts = received.split(" body ");
+          String[] parts = received.split("###");
+          if(parts.length != 3)
+            continue; //Está fora do padrão, não precisa nem continuar a sequência de operações
+          //timestamp
+          String timestamp = parts[0];
           //access control
-          String token = parts[0];
+          String token = parts[1];
           String username = jwtService.getAuthUser(token); //throws AccessDenied if token has no user.
           UserDetails userDetails = userDetailsService.loadUserByUsername(username);
           //the body
-          String body = parts[1].trim();
-          System.out.println("user = "+userDetails+" body = "+body);
+          String body = parts[2].trim();
+          System.out.println("timestamp="+timestamp+" user="+userDetails.getUsername()+" body="+body);
+          //now we send something back. In the future we'll send some kind of world state
+          StringBuffer outboundData = new StringBuffer();
+          long unixTimestamp = System.currentTimeMillis();
+          outboundData.append(unixTimestamp);
+          outboundData.append("###");
+          outboundData.append("TODO: Send World State");
+          byte[] outboundBuffer = outboundData.toString().getBytes(StandardCharsets.US_ASCII);
+          DatagramPacket outboundPacket = new DatagramPacket(outboundBuffer, outboundBuffer.length, inboundPacket.getAddress(), inboundPacket.getPort());
+          socket.send(outboundPacket);
         }
         catch(AccessDeniedException ex){
           
