@@ -10,11 +10,16 @@ import java.nio.file.AccessDeniedException;
 
 import javax.annotation.PreDestroy;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import net.dongeronimo.netcode.service.user.UserDetailServiceImpl;
 import net.dongeronimo.netcode.setup.JwtService;
 
 @Component
@@ -33,16 +38,24 @@ public class UDPServer implements Runnable {
      * Flag de controle do loop infinito do thread do server udp. Se false pára o loop.
      */
     private boolean isRunning;
-    
+    /**
+     * Token decoder
+     */
     private JwtService jwtService;
+    /**
+     * To verifiy if the user actually exists
+     */
+    private UserDetailsService userDetailsService;
     /**
      * Inicia o thread do server.
      * @param port a porta do udp
      */
     public UDPServer(@Value("${udp.port}") int port, 
                      @Value("${udp.datagramPacketSize}") int packetSize,
-                     JwtService _JwtService){
+                     JwtService _JwtService,
+                     UserDetailsService _userDetailsService ){
         this.jwtService = _JwtService;
+        this.userDetailsService = _userDetailsService;
         this.port = port;
         this.datagramPacketSize = packetSize;
         isRunning = true;
@@ -80,20 +93,29 @@ public class UDPServer implements Runnable {
       byte[] buffer = new byte[datagramPacketSize];
       while(isRunning){
         try{
+          //Waits for a new Packet
           DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-          socket.receive(packet); //espera o pacote
+          socket.receive(packet); 
+          //Reads the raw data as string
           InetAddress address = packet.getAddress();
           int port = packet.getPort();
           packet = new DatagramPacket(buffer, buffer.length, address, port);
           String received = new String(packet.getData(), 0, packet.getLength());
+          //decodes the packet
           String[] parts = received.split(" body ");
+          //access control
           String token = parts[0];
-          String user = jwtService.getAuthUser(token);
+          String username = jwtService.getAuthUser(token); //throws AccessDenied if token has no user.
+          UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+          //the body
           String body = parts[1].trim();
-          System.out.println("user = "+user+" body = "+body);
+          System.out.println("user = "+userDetails+" body = "+body);
         }
         catch(AccessDeniedException ex){
-          //don't care, dude is blocked.
+          
+        }
+        catch(UsernameNotFoundException ex){
+
         }
         catch(IOException ex){
           System.err.println("Erro de IO");
