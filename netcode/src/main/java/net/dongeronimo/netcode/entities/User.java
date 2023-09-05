@@ -1,4 +1,7 @@
 package net.dongeronimo.netcode.entities;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.*;
 /**
  * The user entity.
@@ -18,15 +21,27 @@ public class User {
     private String password;
     @Column(nullable = false)
     private String role;
+    @OneToMany(mappedBy = "player")
+    private List<InternetProperties> internetProperties;
+
+
+
     public User(){}
     public User(String _username, String _password, String _email, 
-                String _role) {
+                String _role, List<InternetProperties> lst) {
         username = _username;
         password = _password;
         role = _role;
         email = _email;  
+        internetProperties = lst;
+    }
+    public List<InternetProperties> getInternetProperties() {
+        return this.internetProperties;
     }
 
+    public void setInternetProperties(List<InternetProperties> internetProperties) {
+        this.internetProperties = internetProperties;
+    }
     public String getRole() {
         return this.role;
     }
@@ -63,6 +78,14 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+    public void pushInternetProperties(InternetProperties props) {
+        if(internetProperties == null){
+            internetProperties = new ArrayList<>();
+        }
+        internetProperties.add(props);
+        props.setPlayer(this);
+        
     }
 
 }

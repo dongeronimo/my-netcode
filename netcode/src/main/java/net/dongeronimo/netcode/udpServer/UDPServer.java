@@ -113,46 +113,46 @@ public class UDPServer implements Runnable {
      */
     @Override
     public void run() {
-      socket = createSocket(port);
-      byte[] buffer = new byte[datagramPacketSize];
-      while(isRunning){
-        try{
-          //Waits for a new Packet
-          DatagramPacket inboundPacket = new DatagramPacket(buffer, buffer.length);
-          socket.receive(inboundPacket); 
-          //Reads the raw data as string
-          InetAddress address = inboundPacket.getAddress();
-          int port = inboundPacket.getPort();
-          inboundPacket = new DatagramPacket(buffer, buffer.length, address, port);
-          String received = new String(inboundPacket.getData(), 0, inboundPacket.getLength());
-          //decodes the packet
-          processInboundPacket(received);
+      // socket = createSocket(port);
+      // byte[] buffer = new byte[datagramPacketSize];
+      // while(isRunning){
+      //   try{
+      //     //Waits for a new Packet
+      //     DatagramPacket inboundPacket = new DatagramPacket(buffer, buffer.length);
+      //     socket.receive(inboundPacket); 
+      //     //Reads the raw data as string
+      //     InetAddress address = inboundPacket.getAddress();
+      //     int port = inboundPacket.getPort();
+      //     inboundPacket = new DatagramPacket(buffer, buffer.length, address, port);
+      //     String received = new String(inboundPacket.getData(), 0, inboundPacket.getLength());
+      //     //decodes the packet
+      //     processInboundPacket(received);
 
-          String[] parts = received.split("###");
-          if(parts.length != 3)
-            continue; //Está fora do padrão, não precisa nem continuar a sequência de operações
-          //timestamp
-          String timestamp = parts[0];
-          //access control
-          String token = parts[1];
-          String username = jwtService.getAuthUser(token); //throws AccessDenied if token has no user.
-          UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-          //the body
-          String body = parts[2].trim();
-          System.out.println("timestamp="+timestamp+" user="+userDetails.getUsername()+" body="+body);
-          //now we send something back. In the future we'll send some kind of world state
-          StringBuffer outboundData = new StringBuffer();
-          long unixTimestamp = System.currentTimeMillis();
-          outboundData.append(unixTimestamp);
-          outboundData.append("###");
-          outboundData.append("TODO: Send World State");
-          byte[] outboundBuffer = outboundData.toString().getBytes(StandardCharsets.US_ASCII);
-          DatagramPacket outboundPacket = new DatagramPacket(outboundBuffer, outboundBuffer.length, inboundPacket.getAddress(), inboundPacket.getPort());
-          socket.send(outboundPacket);
-        }
-        catch(Exception ex){
-          logger.error("Eating exception in udp loop.", ex);
-        }
-      }
+      //     String[] parts = received.split("###");
+      //     if(parts.length != 3)
+      //       continue; //Está fora do padrão, não precisa nem continuar a sequência de operações
+      //     //timestamp
+      //     String timestamp = parts[0];
+      //     //access control
+      //     String token = parts[1];
+      //     String username = jwtService.getAuthUser(token); //throws AccessDenied if token has no user.
+      //     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+      //     //the body
+      //     String body = parts[2].trim();
+      //     System.out.println("timestamp="+timestamp+" user="+userDetails.getUsername()+" body="+body);
+      //     //now we send something back. In the future we'll send some kind of world state
+      //     StringBuffer outboundData = new StringBuffer();
+      //     long unixTimestamp = System.currentTimeMillis();
+      //     outboundData.append(unixTimestamp);
+      //     outboundData.append("###");
+      //     outboundData.append("TODO: Send World State");
+      //     byte[] outboundBuffer = outboundData.toString().getBytes(StandardCharsets.US_ASCII);
+      //     DatagramPacket outboundPacket = new DatagramPacket(outboundBuffer, outboundBuffer.length, inboundPacket.getAddress(), inboundPacket.getPort());
+      //     socket.send(outboundPacket);
+      //   }
+      //   catch(Exception ex){
+      //     logger.error("Eating exception in udp loop.", ex);
+      //   }
+      // }
     }
 }

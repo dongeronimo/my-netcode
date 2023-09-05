@@ -27,7 +27,11 @@ public class MySecurityConfig {
         .antMatchers(HttpMethod.POST, "/login").permitAll()
         .antMatchers(HttpMethod.POST, "/signup").permitAll()
         .antMatchers("/h2").permitAll()
-        .anyRequest().authenticated().and().addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .antMatchers("/h2-console/**").permitAll()
+        .anyRequest()
+         .permitAll();
+        // .authenticated().and()
+        // .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
     @Bean

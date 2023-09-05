@@ -25,7 +25,7 @@ public class SignInService {
 
     public String createNewUser(String email, String username, String password){
         //Cria o novo usuário no db
-        User newUser = new User(username, passwordEncoder.encode(password), email, "USER");
+        User newUser = new User(username, passwordEncoder.encode(password), email, "USER", null);
         newUser = userRepository.save(newUser);
         //Autentica o novo usuário pro jogador não precisar redigitar suas credenciais
         UsernamePasswordAuthenticationToken creds = new UsernamePasswordAuthenticationToken(

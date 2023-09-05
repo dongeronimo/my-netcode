@@ -38,7 +38,7 @@ public class JwtService {
         return null;
     }
 
-    public String getAuthUser(String token) throws AccessDeniedException{
+    public String getAuthUser(String token) throws RuntimeException{
         String user = Jwts.parserBuilder()
         .setSigningKey(key)
         .build()
@@ -48,7 +48,7 @@ public class JwtService {
         if(user!=null){
             return user;
         }else {
-            throw new AccessDeniedException("unknown user");
+            throw new RuntimeException("unknown user");
         }
     }
 }

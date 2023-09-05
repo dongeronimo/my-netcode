@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 import net.dongeronimo.netcode.udpServer.UDPServer;
 @Component
 public class UDPServerStarter implements CommandLineRunner{
-    private UDPServer server;
-    public UDPServerStarter(UDPServer server){
-    }
+    // private UDPServer server;
+    // public UDPServerStarter(UDPServer server){
+    // }
     @Override
     public void run(String... args) throws Exception {
         

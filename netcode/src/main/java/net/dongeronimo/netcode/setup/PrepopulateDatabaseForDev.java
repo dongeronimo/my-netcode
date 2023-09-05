@@ -20,8 +20,8 @@ public class PrepopulateDatabaseForDev implements CommandLineRunner {
         userRepository.deleteAll();
         //String _username, String _password, String _role
         User alice = new User("alice", passwordEncoder.encode("blablabla"),"luciano.geronimo.fnord@gmail.com", 
-            "USER");
-        User bob = new User("bob",passwordEncoder.encode("blablabla"),"luciano.geronimo.lisboa@outlook.com","USER");
+            "USER", null);
+        User bob = new User("bob",passwordEncoder.encode("blablabla"),"luciano.geronimo.lisboa@outlook.com","USER", null);
         userRepository.save(alice);
         userRepository.save(bob);
         System.out.println("Users de teste criados");
