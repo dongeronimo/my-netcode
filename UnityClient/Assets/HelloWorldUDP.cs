@@ -51,9 +51,6 @@ public class HelloWorldUDP : MonoBehaviour
         string incomingData = Encoding.ASCII.GetString(incomingBytes);
         string[] pieces = incomingData.Split("###");
         Debug.Log($"{pieces[0]}:{pieces[1]}");
-        //byte[] receivedBytes = client.Receive(ref ep);
-        //string returnData = Encoding.ASCII.GetString(receivedBytes);
-        //Debug.Log(returnData);
 
     }
     IEnumerator SendData(string token)

@@ -1,9 +1,14 @@
 using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json.Linq;
+using System.Threading;
 
 public class NetworkedGameManager : MonoBehaviour
 {
@@ -18,13 +23,23 @@ public class NetworkedGameManager : MonoBehaviour
     public string tokem;
     public void LoginWithAlice()
     {
-        StartCoroutine(login((token) => this.tokem = token, "alice", "blablabla"));
+        StartCoroutine(Login((token) => this.tokem = token, "alice", "blablabla"));
     }
     public void LoginWithBob()
     {
-        StartCoroutine(login((token) => this.tokem = token, "bob", "blablabla"));
+        StartCoroutine(Login((token) => this.tokem = token, "bob", "blablabla"));
     }
-    IEnumerator login(System.Action<string> afterLogin, string username, string password)
+
+    public void Connect()
+    {
+        //Send a hello packet to the server so that the server stores my connection data
+        string payload = "HELLO";
+        SendPacket(tokem, payload, false);
+    }
+    
+
+
+    IEnumerator Login(System.Action<string> afterLogin, string username, string password)
     {
         AccountCredentials credentials = new AccountCredentials() { password = password, username = username };
         var request = new UnityWebRequest($"{httpHost}/login", "POST");
@@ -36,5 +51,26 @@ public class NetworkedGameManager : MonoBehaviour
         var responseHeaders = request.GetResponseHeaders();
         var token = responseHeaders["Authorization"];
         afterLogin(token);
+    }
+
+    private void SendPacket(string token, string payload, bool waitAnswer = true)
+    {
+        IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
+        var hostAddress = hostDnsEntries.AddressList[0];
+        UdpClient client = new UdpClient();
+
+        var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+        string message = $"{Timestamp}###{token}###{payload}";
+        client.Connect(hostname: hostname, port: port);
+        byte[] sendBytes = Encoding.ASCII.GetBytes(message);
+        client.Send(sendBytes, sendBytes.Length);
+        if (waitAnswer)
+        {
+            IPEndPoint ep = new IPEndPoint(hostAddress, port);
+            byte[] incomingBytes = client.Receive(ref ep);
+            string incomingData = Encoding.ASCII.GetString(incomingBytes);
+            string[] pieces = incomingData.Split("###");
+            Debug.Log($"{pieces[0]}:{pieces[1]}");
+        }
     }
 }

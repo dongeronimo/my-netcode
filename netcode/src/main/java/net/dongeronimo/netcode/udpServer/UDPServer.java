@@ -14,17 +14,23 @@ import javax.annotation.PreDestroy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
+
+import net.dongeronimo.netcode.service.TimestampService;
 import net.dongeronimo.netcode.service.user.UserDetailServiceImpl;
 import net.dongeronimo.netcode.setup.JwtService;
+import net.dongeronimo.netcode.web.LoginController;
 
 @Component
 public class UDPServer implements Runnable {
+    Logger logger = LoggerFactory.getLogger(LoginController.class);
     private int port;
     private int datagramPacketSize;
     /**
@@ -47,6 +53,8 @@ public class UDPServer implements Runnable {
      * To verifiy if the user actually exists
      */
     private UserDetailsService userDetailsService;
+
+    private TimestampService timestampService;
     /**
      * Inicia o thread do server.
      * @param port a porta do udp
@@ -54,9 +62,11 @@ public class UDPServer implements Runnable {
     public UDPServer(@Value("${udp.port}") int port, 
                      @Value("${udp.datagramPacketSize}") int packetSize,
                      JwtService _JwtService,
-                     UserDetailsService _userDetailsService ){
+                     UserDetailsService _userDetailsService,
+                     TimestampService _TimestampService){
         this.jwtService = _JwtService;
         this.userDetailsService = _userDetailsService;
+        this.timestampService = _TimestampService;
         this.port = port;
         this.datagramPacketSize = packetSize;
         isRunning = true;
@@ -85,6 +95,19 @@ public class UDPServer implements Runnable {
       } 
     }
     
+    void processInboundPacket(String received) throws AccessDeniedException {
+      String[] parts = received.split("###");
+      if(parts.length != 3)
+        throw new RuntimeException("invalid format:"+received);
+      String timestamp = parts[0];
+      if(timestampService.evaluateTimestamp(timestamp)==false){
+        throw new RuntimeException("bad timestamp");
+      }
+      String token = parts[1];
+      String username = jwtService.getAuthUser(token); //throws AccessDenied if token has no user.
+      UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+      String body = parts[2].trim();
+    }
     /**
      * Loop do thread
      */
@@ -103,6 +126,8 @@ public class UDPServer implements Runnable {
           inboundPacket = new DatagramPacket(buffer, buffer.length, address, port);
           String received = new String(inboundPacket.getData(), 0, inboundPacket.getLength());
           //decodes the packet
+          processInboundPacket(received);
+
           String[] parts = received.split("###");
           if(parts.length != 3)
             continue; //Está fora do padrão, não precisa nem continuar a sequência de operações
@@ -125,15 +150,8 @@ public class UDPServer implements Runnable {
           DatagramPacket outboundPacket = new DatagramPacket(outboundBuffer, outboundBuffer.length, inboundPacket.getAddress(), inboundPacket.getPort());
           socket.send(outboundPacket);
         }
-        catch(AccessDeniedException ex){
-          
-        }
-        catch(UsernameNotFoundException ex){
-
-        }
-        catch(IOException ex){
-          System.err.println("Erro de IO");
-          ex.printStackTrace(System.err);
+        catch(Exception ex){
+          logger.error("Eating exception in udp loop.", ex);
         }
       }
     }
