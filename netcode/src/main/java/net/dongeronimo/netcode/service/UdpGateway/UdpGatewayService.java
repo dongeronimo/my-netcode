@@ -3,20 +3,25 @@ package net.dongeronimo.netcode.service.UdpGateway;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
-import net.dongeronimo.netcode.service.TimestampService;
+import net.dongeronimo.netcode.entities.InternetProperties;
+import net.dongeronimo.netcode.entities.User;
+import net.dongeronimo.netcode.entities.UserRepository;
+import net.dongeronimo.netcode.service.OutboundDataBrokerService;
 import net.dongeronimo.netcode.service.command.CommandService;
-import net.dongeronimo.netcode.setup.JwtService;
 import net.dongeronimo.netcode.vo.IncomingPacketVO;
-import net.dongeronimo.netcode.web.LoginController;
+import net.dongeronimo.netcode.vo.OutboundDataVO;
 
 @Service
 public class UdpGatewayService implements Runnable {
@@ -35,18 +40,9 @@ public class UdpGatewayService implements Runnable {
      * Flag de controle do loop infinito do thread do server udp. Se false pára o loop.
      */
     private boolean isRunning;
-    /**
-     * Token decoder
-     */
-    private JwtService jwtService; //TO-DO delete
-    /**
-     * To verifiy if the user actually exists
-     */
-    private UserDetailsService userDetailsService; //TO-DO delete
-    /**
-     * Timestamp validator, for now it only returns true.
-     */
-    private TimestampService timestampService; //TO-DO delete
+    @Autowired
+    private UserRepository userRepository;
+    private final OutboundDataBrokerService outboundDataBrokerService;
         /**
      * Inicia o thread do server.
      * @param port a porta do udp
@@ -54,17 +50,55 @@ public class UdpGatewayService implements Runnable {
     private InboundPacketProcessor packetProcessor;
     private CommandService commandService;
     public UdpGatewayService(@Value("${udp.port}") int port, 
+                     OutboundDataBrokerService _OutboundDataBrokerService,
                      @Value("${udp.datagramPacketSize}") int packetSize,
-                     JwtService _JwtService,
-                     UserDetailsService _userDetailsService,
-                     TimestampService _TimestampService,
                      InboundPacketProcessor _InboundPacketProcessor,
                      CommandService _CommandService){
-        this.jwtService = _JwtService;
         this.commandService = _CommandService;
+        this.outboundDataBrokerService = _OutboundDataBrokerService;
+        outboundDataBrokerService.observer.subscribe((OutboundDataVO t)->{
+        	try {
+        		//monta o packet
+        		StringBuffer outboundData = new StringBuffer();
+        		long unixTimestamp = System.currentTimeMillis();
+        		outboundData.append(unixTimestamp);
+        		outboundData.append("###");
+        		outboundData.append("SERVER");
+        		outboundData.append("###");
+        		outboundData.append(t.what);
+        		t.payload.keySet().forEach((String k)->{
+        			outboundData.append(k);
+        			outboundData.append(":");
+        			outboundData.append(t.payload.get(k));
+        		});
+        		//vê pra quem mandar
+        		List<String> destinations = Arrays.asList( t.toWhom.split(";") );
+        		destinations.forEach( (String d)->{
+        			try {
+        				//envia
+        				User dest = userRepository.findByUsername(d).get();//TODO: não enviar pra quem está offline
+        				Comparator<InternetProperties> comp = (InternetProperties a, InternetProperties b)->{
+        					return (int)(b.getId() - a.getId());//TODO: remover os end velhos
+        				};
+        				dest.getInternetProperties().sort(comp);
+        				InternetProperties ipPort = dest.getInternetProperties().get(dest.getInternetProperties().size()-1);
+        				byte[] outboundBuffer = outboundData.toString().getBytes();
+        				//TODO: Barrar buffers co mais de 1400 bytes
+        				DatagramPacket packet = new DatagramPacket(outboundBuffer, outboundBuffer.length, InetAddress.getByName(ipPort.getIp()), ipPort.getPort());
+        				socket.send(packet);
+        			}
+        			catch(Exception ex) {
+        				throw new RuntimeException(ex);
+        			}
+        		});
+        	}
+        	catch(Exception ex) {
+        		logger.error(ex.getLocalizedMessage());
+        	}
+        }, (Throwable t)->{
+        	
+        });
         this.packetProcessor = _InboundPacketProcessor;
-        this.userDetailsService = _userDetailsService;
-        this.timestampService = _TimestampService;
         this.port = port;
         this.datagramPacketSize = packetSize;
         isRunning = true;

@@ -12,6 +12,7 @@ using System.Threading;
 
 public class NetworkedGameManager : MonoBehaviour
 {
+    private IncomingDatagramHandller incomingDatagramHandller;
     [Header("Connection Properties")]
     [SerializeField]
     private string hostname;
@@ -20,6 +21,7 @@ public class NetworkedGameManager : MonoBehaviour
     [SerializeField]
     private string httpHost;
 
+    private UdpClient udpClient;
     public string tokem;
     public void LoginWithAlice()
     {
@@ -32,9 +34,20 @@ public class NetworkedGameManager : MonoBehaviour
 
     public void Connect()
     {
-        //Send a hello packet to the server so that the server stores my connection data
-        string payload = "HELLO";
-        SendPacket(tokem, payload, false);
+        IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
+        IPAddress hostAddress = hostDnsEntries.AddressList[0];
+        udpClient = new UdpClient();
+        udpClient.Connect(hostname: hostname, port: port);
+        //Cria o thread que ouve as respostas do server
+        //manda o pacote de hello pro server
+        //se receber ack do server, considere-se conectado
+        if (incomingDatagramHandller == null) 
+            incomingDatagramHandller = new IncomingDatagramHandller(hostAddress, port, udpClient);
+        incomingDatagramHandller.Start();
+
+        ////Send a hello packet to the server so that the server stores my connection data
+        //string payload = "HELLO";
+        //SendPacket(tokem, payload, false);
     }
     
 

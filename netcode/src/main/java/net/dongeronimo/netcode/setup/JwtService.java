@@ -1,10 +1,12 @@
 package net.dongeronimo.netcode.setup;
-import java.nio.file.AccessDeniedException;
 import java.security.Key;
 import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

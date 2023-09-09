@@ -37,7 +37,7 @@ public class HelloWorldUDP : MonoBehaviour
     private void SendPacket(string token, string payload)
     {
         IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
-        var hostAddress = hostDnsEntries.AddressList[0];
+        IPAddress hostAddress = hostDnsEntries.AddressList[0];
         UdpClient client = new UdpClient();
 
         var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();

@@ -1,38 +1,24 @@
 package net.dongeronimo.netcode.udpServer;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AccessDeniedException;
 
 import javax.annotation.PreDestroy;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-import java.time.Instant;
 
 import net.dongeronimo.netcode.service.TimestampService;
-import net.dongeronimo.netcode.service.user.UserDetailServiceImpl;
 import net.dongeronimo.netcode.setup.JwtService;
 import net.dongeronimo.netcode.web.LoginController;
 
 @Component
 public class UDPServer implements Runnable {
     Logger logger = LoggerFactory.getLogger(LoginController.class);
-    private int port;
-    private int datagramPacketSize;
+    //private int port;
+    //private int datagramPacketSize;
     /**
      * O socket é inicializado logo no começo do thread.
      */
@@ -59,6 +45,7 @@ public class UDPServer implements Runnable {
      * Inicia o thread do server.
      * @param port a porta do udp
      */
+    /*
     public UDPServer(@Value("${udp.port}") int port, 
                      @Value("${udp.datagramPacketSize}") int packetSize,
                      JwtService _JwtService,
@@ -67,12 +54,13 @@ public class UDPServer implements Runnable {
         this.jwtService = _JwtService;
         this.userDetailsService = _userDetailsService;
         this.timestampService = _TimestampService;
-        this.port = port;
-        this.datagramPacketSize = packetSize;
+       // this.port = port;
+        //this.datagramPacketSize = packetSize;
         isRunning = true;
         udpServerThread= new Thread(this,"udp server");
         udpServerThread.start();
     }
+    */
     /** Onde vou liberar os recursos. Liberar a porta udp entre outras coisas. Isso é necessário
      * pq senão quando eu alterar codigo e o hotreload rodar o servidor vai ficar travando a porta
      * se eu n matá-lo aquo
@@ -84,6 +72,7 @@ public class UDPServer implements Runnable {
         isRunning = false;
         udpServerThread.join();
     }
+    /*
     private DatagramSocket createSocket(int port) {
       try{
         DatagramSocket socket = new DatagramSocket(port);
@@ -94,7 +83,8 @@ public class UDPServer implements Runnable {
         throw new RuntimeException(ex);
       } 
     }
-    
+    */
+    /*
     void processInboundPacket(String received) throws AccessDeniedException {
       String[] parts = received.split("###");
       if(parts.length != 3)
@@ -108,6 +98,7 @@ public class UDPServer implements Runnable {
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
       String body = parts[2].trim();
     }
+    */
     /**
      * Loop do thread
      */

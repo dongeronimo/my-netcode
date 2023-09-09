@@ -17,6 +17,12 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -66,7 +72,18 @@
 		 	<scope>runtime</scope>
 		</dependency>
 		<!-- fim das dependencias do jwt -->
-
+		<!-- Dependencias do RxJava-->
+		<dependency>
+  			<groupId>io.reactivex.rxjava3</groupId>
+  			<artifactId>rxjava</artifactId>
+  			<version>3.1.7</version>
+		</dependency>
+		<!-- Jackson -->
+		<dependency>
+    		<groupId>com.fasterxml.jackson.core</groupId>
+    		<artifactId>jackson-core</artifactId>
+    		<version>2.15.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>
