@@ -58,7 +58,6 @@ public class UdpGatewayService implements Runnable {
         this.outboundDataBrokerService = _OutboundDataBrokerService;
         outboundDataBrokerService.observer.subscribe((OutboundDataVO t)->{
         	try {
-            logger.debug("Vai processar "+t.id+" "+t.toWhom+" "+t.what);
         		//monta o packet
         		StringBuffer outboundData = new StringBuffer();
         		long unixTimestamp = System.currentTimeMillis();
@@ -66,13 +65,19 @@ public class UdpGatewayService implements Runnable {
         		outboundData.append("###");
         		outboundData.append("SERVER");
         		outboundData.append("###");
-        		outboundData.append(t.what);
-            if(t.payload != null)
-        		t.payload.keySet().forEach((String k)->{
-        			outboundData.append(k);
-        			outboundData.append(":");
-        			outboundData.append(t.payload.get(k));
-        		});
+            if(t.assembler == null) {
+        		  outboundData.append(t.what);
+              if(t.payload != null){
+        		    outboundData.append(":");
+                t.payload.keySet().forEach((String k)->{
+        		  	  outboundData.append(k);
+        		  	  outboundData.append(":");
+        		  	  outboundData.append(t.payload.get(k));
+        		    });
+              }
+            }else{
+              outboundData.append(t.assembler.assemble());
+            }
         		//vê pra quem mandar
         		List<String> destinations = Arrays.asList( t.toWhom.split(";") );
         		destinations.forEach( (String d)->{

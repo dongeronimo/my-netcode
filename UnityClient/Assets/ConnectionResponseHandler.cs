@@ -11,7 +11,7 @@ public class ConnectionResponseHandler
     /// <returns></returns>
     public bool CanHandle(string payload)
     {
-        if(payload == "connection_ack")
+        if(payload.Contains("connection_ack"))
         {
             return true;
         }
@@ -26,6 +26,7 @@ public class ConnectionResponseHandler
     /// <param name="payload"></param>
     public void Handle(string payload)
     {
+        Debug.Log("Alterando o state pra connected");
         GameStateStorage.Connected();
     }
 }

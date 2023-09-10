@@ -1,4 +1,5 @@
-    using System.Collections;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -7,7 +8,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class IncomingDatagramHandller
+public class IncomingDatagramHandller 
 {
     private bool threadFlag = true;
     private Thread thread;
@@ -57,4 +58,5 @@ public class IncomingDatagramHandller
         thread.Join();
         yield return new WaitWhile(() => thread.IsAlive);
     }
+
 }

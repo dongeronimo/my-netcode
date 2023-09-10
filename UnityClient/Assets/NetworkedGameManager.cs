@@ -21,9 +21,13 @@ public class NetworkedGameManager : MonoBehaviour, IObserver<GameState>
     private int port;
     [SerializeField]
     private string httpHost;
+    [SerializeField]
+    private bool isConnected;
 
+    public bool IsConnected() { return isConnected; }
     private UdpClient udpClient;
     public string tokem;
+
 
     private void Start()
     {
@@ -51,7 +55,7 @@ public class NetworkedGameManager : MonoBehaviour, IObserver<GameState>
             incomingDatagramHandller = new IncomingDatagramHandller(hostAddress, port, udpClient);
         incomingDatagramHandller.Start();
         //Sends the connection message
-        SendPacket(tokem, "HELLO", hostAddress, port, udpClient);
+        SendPacket(tokem, "HELLO",  port, udpClient);
     }
     
 
@@ -70,9 +74,8 @@ public class NetworkedGameManager : MonoBehaviour, IObserver<GameState>
         afterLogin(token);
     }
 
-    private void SendPacket(string token, string payload, IPAddress hostAddress, int port, UdpClient udpClient)
+    private void SendPacket(string token, string payload, int port, UdpClient udpClient)
     {
-
         var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
         string message = $"{Timestamp}###{token}###{payload}";
         udpClient.Connect(hostname: hostname, port: port);
@@ -89,9 +92,24 @@ public class NetworkedGameManager : MonoBehaviour, IObserver<GameState>
     {
         throw new NotImplementedException("O observer nunca deveria jogar erro");
     }
+    private GameState previousState = new GameState { connectionState = ConnectionState.NotConnected };
 
-    void IObserver<GameState>.OnNext(GameState value)
+    void IObserver<GameState>.OnNext(GameState newState)
     {
-        
+        Debug.Log($"state = connectionState={newState.connectionState}");
+        UpdateIsConnectedFlag(newState);
+        previousState = newState;
+    }
+
+    private void UpdateIsConnectedFlag(GameState newState)
+    {
+        if (newState.connectionState == ConnectionState.Connected)
+        {
+            isConnected = true;
+        }
+        else
+        {
+            isConnected = false;
+        }
     }
 }

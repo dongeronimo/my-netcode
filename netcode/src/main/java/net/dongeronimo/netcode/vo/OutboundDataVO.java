@@ -9,6 +9,7 @@ import org.springframework.lang.Nullable;
  * Data Carrier of Outbound Data Broker.
  * */
 public class OutboundDataVO {
+	public PayloadAssembler assembler;
 	/**
 	 * Hack, but makes the equality very easy to do
 	 * */
@@ -54,5 +55,9 @@ public class OutboundDataVO {
 	@Override
 	public int hashCode() {
 		return ((Long)id).hashCode();
+	}
+
+	public interface PayloadAssembler {
+		String assemble();
 	}
 }
