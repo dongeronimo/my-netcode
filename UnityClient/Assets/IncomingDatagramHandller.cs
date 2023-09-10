@@ -14,6 +14,7 @@ public class IncomingDatagramHandller
     private IPAddress hostAddress;
     private int port;
     private UdpClient udpClient;
+    private ConnectionResponseHandler connectionResponseHandler = new ConnectionResponseHandler();
     public IncomingDatagramHandller(IPAddress hostAddress, int port, UdpClient udpClient)
     {
         this.hostAddress = hostAddress;
@@ -38,7 +39,10 @@ public class IncomingDatagramHandller
                 string incomingData = Encoding.ASCII.GetString(incomingBytes).Trim();
                 string[] pieces = incomingData.Split("###");
                 Debug.Log($"{pieces[0]}; {pieces[1]}; {pieces[2]}");
-                
+                if (connectionResponseHandler.CanHandle(pieces[2]))
+                {
+                    connectionResponseHandler.Handle(pieces[2]);
+                }
             }
         });
         thread.Start();

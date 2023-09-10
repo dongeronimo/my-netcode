@@ -9,8 +9,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using UniRx;
 
-public class NetworkedGameManager : MonoBehaviour
+public class NetworkedGameManager : MonoBehaviour, IObserver<GameState>
 {
     private IncomingDatagramHandller incomingDatagramHandller;
     [Header("Connection Properties")]
@@ -23,6 +24,11 @@ public class NetworkedGameManager : MonoBehaviour
 
     private UdpClient udpClient;
     public string tokem;
+
+    private void Start()
+    {
+        GameStateStorage.state.SubscribeOnMainThread().Subscribe(this);
+    }
     public void LoginWithAlice()
     {
         StartCoroutine(Login((token) => this.tokem = token, "alice", "blablabla"));
@@ -35,6 +41,7 @@ public class NetworkedGameManager : MonoBehaviour
     public void Connect()
     {
         //Udp "connection"
+        GameStateStorage.Connecting();
         IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
         IPAddress hostAddress = hostDnsEntries.AddressList[0];
         udpClient = new UdpClient();
@@ -71,5 +78,20 @@ public class NetworkedGameManager : MonoBehaviour
         udpClient.Connect(hostname: hostname, port: port);
         byte[] sendBytes = Encoding.ASCII.GetBytes(message);
         udpClient.Send(sendBytes, sendBytes.Length);
+    }
+
+    void IObserver<GameState>.OnCompleted()
+    {
+        throw new NotImplementedException("O observer deveria ser eterno e nunca completar");
+    }
+
+    void IObserver<GameState>.OnError(Exception error)
+    {
+        throw new NotImplementedException("O observer nunca deveria jogar erro");
+    }
+
+    void IObserver<GameState>.OnNext(GameState value)
+    {
+        
     }
 }
