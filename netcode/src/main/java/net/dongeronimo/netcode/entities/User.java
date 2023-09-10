@@ -79,13 +79,6 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
-    public void pushInternetProperties(InternetProperties props) {
-        if(internetProperties == null){
-            internetProperties = new ArrayList<>();
-        }
-        internetProperties.add(props);
-        props.setPlayer(this);
-        
-    }
+
 
 }

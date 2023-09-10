@@ -34,20 +34,17 @@ public class NetworkedGameManager : MonoBehaviour
 
     public void Connect()
     {
+        //Udp "connection"
         IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
         IPAddress hostAddress = hostDnsEntries.AddressList[0];
         udpClient = new UdpClient();
         udpClient.Connect(hostname: hostname, port: port);
-        //Cria o thread que ouve as respostas do server
-        //manda o pacote de hello pro server
-        //se receber ack do server, considere-se conectado
+        //Listener thread
         if (incomingDatagramHandller == null) 
             incomingDatagramHandller = new IncomingDatagramHandller(hostAddress, port, udpClient);
         incomingDatagramHandller.Start();
-
-        ////Send a hello packet to the server so that the server stores my connection data
-        //string payload = "HELLO";
-        //SendPacket(tokem, payload, false);
+        //Sends the connection message
+        SendPacket(tokem, "HELLO", hostAddress, port, udpClient);
     }
     
 
@@ -66,24 +63,13 @@ public class NetworkedGameManager : MonoBehaviour
         afterLogin(token);
     }
 
-    private void SendPacket(string token, string payload, bool waitAnswer = true)
+    private void SendPacket(string token, string payload, IPAddress hostAddress, int port, UdpClient udpClient)
     {
-        IPHostEntry hostDnsEntries = Dns.GetHostEntry(hostNameOrAddress: hostname);
-        var hostAddress = hostDnsEntries.AddressList[0];
-        UdpClient client = new UdpClient();
 
         var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
         string message = $"{Timestamp}###{token}###{payload}";
-        client.Connect(hostname: hostname, port: port);
+        udpClient.Connect(hostname: hostname, port: port);
         byte[] sendBytes = Encoding.ASCII.GetBytes(message);
-        client.Send(sendBytes, sendBytes.Length);
-        if (waitAnswer)
-        {
-            IPEndPoint ep = new IPEndPoint(hostAddress, port);
-            byte[] incomingBytes = client.Receive(ref ep);
-            string incomingData = Encoding.ASCII.GetString(incomingBytes);
-            string[] pieces = incomingData.Split("###");
-            Debug.Log($"{pieces[0]}:{pieces[1]}");
-        }
+        udpClient.Send(sendBytes, sendBytes.Length);
     }
 }
