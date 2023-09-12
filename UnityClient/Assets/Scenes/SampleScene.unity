@@ -873,6 +873,7 @@ MonoBehaviour:
   hostname: localhost
   port: 11111
   httpHost: localhost:8080
+  isConnected: 0
   tokem: 
 --- !u!1 &1050050333
 GameObject:
